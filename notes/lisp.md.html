@@ -1,0 +1,55 @@
+                <meta charset="utf-8" emacsmode="-*- markdown -*-">
+                            **Using lisp as a scripting language in 2019**
+
+Recently I have built a little web app called [csg-lab](https://hb3p8.github.io/). It is a raytracer, specially designed to render **CSG** (Constructive Solid Geometry) expressions combined from simple geometric primitives (e.g. sphere, cube, cylinder).
+
+![Sample model](figures/csg3.gif)
+
+Since I could not invest much time in this project, I have decided to keep UI very minimalistic and that meant I could not build a sophisticated system of gizmos, handles and snappings in order to aid user in his journey of building 3D worlds. Not like these are really working for CSG anyway, screw them!
+
+Another kind of interface for editing CSG is a *program*! It is actually a widespread way to built a parametric model in area of 3D printing:
+
+* [OpenSCAD](http://www.openscad.org/)
+* [IceSL](https://icesl.loria.fr/)
+* [libfive by @impraxical](https://libfive.com/studio/)
+
+This kind of modeling interface is fairly simple to implement and still it gives the user all the creative power! (Well, theoretically).
+
+Let's check our requirements to the system:
+
+* We are already building a web app with Emscripten, thus we do not like too much bloat. At least let's not put a whole Python in it! No, V8, you are not going in either.
+* Scripting language better be fast, but it is not like it is the first priority issue. We do not expect too much of heavy geometric processing in a parametric *definition* of a 3D model, do we?
+
+So, that kind of scripting language is suitable? First thing that comes to mind is *Lua*. It is both small enough and fast enough. But I do not personally like Lua very much and it feels a bit boring to integrate it yet another time. Also, at the moment I was inspired by the usage of Scheme in *libfive* and at the same time I found an article about lisp implementation in Python [link](http://norvig.com/lispy.html). Who would resist that temptation! Happily I quickly found c++ port by Ryan Feng [link](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) and got something lispish printing numbers for me in one evening, nice!
+
+In case if you want your own lisp interpreter and decided to take [this](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) as a foundation, you might want to know how far it could take you.
+
+Goodies:
+
+* It's lisp. Kind of.
+* It's pretty small.
+* It's insanely extensible and easy to integrate with. Think of it, you could read and keep in mind the whole thing.
+
+Baddies:
+
+* It's far from Scheme or Common Lisp. You will have to implement most necessary things and you will probably miss lots of convenience things.
+* It is writen in C++ and uses STL, ouch.
+* Someone might want from scripting language to support strings, silly!
+* Lack of real numbers and comments is a bit inconvenient.
+* But will my tail recursion be efficient?
+* ...
+
+As you might guess I was fixing the baddies with a certain joy for a few evenings after. Nice exercise if you are not really into languages but still interested in how basic things work. I have managed to make a simple test models with it without too much pain. Still I don't think I will be able to bring it to the needed level (you know the level at which other people could use things) in a reasonable time. That is why I decided to give [Wren](http://wren.io/) a go. We'll see how it goes.
+
+Nevertheless, I think the tiny lisp could be of a great use even without much polishing. It is much smaller than both Lua and Wren. Think of little imgui tools that you only use yourself. If you ever need scripting here, tiny drop-in lisp would be just fine. As long as you are fine with lisp of course.
+
+
+
+
+
+
+
+
+
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js?" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
