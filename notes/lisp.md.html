@@ -20,11 +20,11 @@ Let's check our requirements to the system:
 * We are already building a web app with Emscripten, thus we do not like too much bloat. At least let's not put a whole Python in it! No, V8, you are not going in either.
 * Scripting language better be fast, but it is not like it is the first priority issue. We do not expect too much of heavy geometric processing in a parametric *definition* of a 3D model, do we?
 
-So, that kind of scripting language is suitable? First thing that comes to mind is *Lua*. It is both small enough and fast enough. But I do not personally like Lua very much and it feels a bit boring to integrate it yet another time. Also, at the moment I was inspired by the usage of Scheme in *libfive* and at the same time I found an article about lisp implementation in Python [link](http://norvig.com/lispy.html). Who would resist that temptation! Happily I quickly found c++ port by Anthony C. Hay [link](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) and got something lispish printing numbers for me in one evening, nice!
+So, that kind of scripting language is suitable? First thing that comes to mind is *Lua*. It is both small enough and fast enough. But I do not personally like Lua very much and it feels a bit boring to integrate it yet another time. Also, at the moment I was inspired by the usage of Scheme in *libfive* and at the same time I found an article about lisp implementation in Python [link](http://norvig.com/lispy.html). Who would resist that temptation! Happily I quickly found c++ port by Anthony C. Hay [link](http://howtowriteaprogram.blogspot.com/2010/11/lisp-interpreter-in-90-lines-of-c.html) and got something lispish printing numbers for me in one evening, nice!
 
 *Of course both Peter Norvig and Anthony C. Hay did a great job building their implementations and allowing lazy people like me using their work. It would be plain stupid to complain about incompleteness of implementation since it is clearly stated.*
 
-Still, in case if you want to build your own lisp interpreter and decided to take [lisp.cpp](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) as a foundation, you might want to know how far it could take you.
+Still, in case if you want to build your own lisp interpreter and decided to take [lisp.cpp](http://howtowriteaprogram.blogspot.com/2010/11/lisp-interpreter-in-90-lines-of-c.html) as a foundation, you might want to know how far it could take you.
 
 Goodies:
 
