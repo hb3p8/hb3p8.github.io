@@ -22,7 +22,9 @@ Let's check our requirements to the system:
 
 So, that kind of scripting language is suitable? First thing that comes to mind is *Lua*. It is both small enough and fast enough. But I do not personally like Lua very much and it feels a bit boring to integrate it yet another time. Also, at the moment I was inspired by the usage of Scheme in *libfive* and at the same time I found an article about lisp implementation in Python [link](http://norvig.com/lispy.html). Who would resist that temptation! Happily I quickly found c++ port by Ryan Feng [link](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) and got something lispish printing numbers for me in one evening, nice!
 
-In case if you want your own lisp interpreter and decided to take [this](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) as a foundation, you might want to know how far it could take you.
+*Of course both Peter Norvig and Ryan Feng did a great job building their implementations and allowing lazy people like me using their work. It would be plain stupid to complain about incompleteness of implementation since it is clearly stated.*
+
+Still, in case if you want to build your own lisp interpreter and decided to take [lisp.cpp](https://gist.github.com/ofan/721464/e1893899739abf7f3e4167bbb722b0420799047f) as a foundation, you might want to know how far it could take you.
 
 Goodies:
 
@@ -36,6 +38,7 @@ Baddies:
 * It is writen in C++ and uses STL, ouch.
 * Someone might want from scripting language to support strings, silly!
 * Lack of real numbers and comments is a bit inconvenient.
+* Error handling might be a nice thing to add (nope, too boring).
 * But will my tail recursion be efficient?
 * ...
 
