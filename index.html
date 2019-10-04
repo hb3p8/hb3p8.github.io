@@ -3,9 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"/>
-    <title>Emscripten-Generated Code</title>
+    <title>Tori</title>
     <style>
-        body { margin: 0; background-color: black }
+        @import url('https://fonts.googleapis.com/css?family=Roboto');
+
+        body { margin: 0; background-color: #000 }
         .game {
             position: absolute;
             top: 0px;
@@ -25,14 +27,265 @@
             image-rendering: pixelated;
             -ms-interpolation-mode: nearest-neighbor;
         }
+
+        .lds-ring {
+          display: inline-block;
+          position: relative;
+          width: 64px;
+          height: 64px;
+        }
+        .lds-ring div {
+          box-sizing: border-box;
+          display: block;
+          position: absolute;
+          width: 51px;
+          height: 51px;
+          margin-top: 15px;
+          border: 6px solid #fff;
+          border-radius: 50%;
+          animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+          border-color: #fff transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+          animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+          animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+          animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .center-xy {
+          // width: inherit;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%,-50%);
+          position: absolute;
+        }
+
+        .container {
+          width: 100%;
+        }
+
+        .copy-container {
+          text-align: center;
+        }
+
+        .loader-label {
+          font-family: 'Roboto Mono', monospace;
+          color: #fff;
+          font-size: 24px;
+          letter-spacing: .2px;
+          margin: 0;
+        }
     </style>
   </head>
   <body>
+    <input type="file" style="width: 0;">
+
+    <div class="container">
+      <div class="copy-container center-xy">
+        <p class="loader-label">
+          Loading...
+        </p>
+
+        <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+      </div>
+    </div>
+
     <canvas class="game" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
     <script type='text/javascript'>
       var Module = {
+        openFileReqId: 0, // should be set from app
+        dropFileId: 0, // should be set from app
+
+        arrayToHeap: function(typedArray) {
+
+            var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
+            var ptr = Module._malloc(numBytes);
+            var heapSubarray = Module.HEAP8.subarray(ptr, ptr + numBytes);
+            heapSubarray.set(typedArray);
+            return ptr;
+        },
+        strToHeap: function(str) {
+
+            let enc = new TextEncoder();
+            let array = enc.encode(str);
+            var numBytes = array.length + 1;
+            var ptr = Module._malloc(numBytes);
+            var heapSubarray = Module.HEAP8.subarray(ptr, ptr + numBytes);
+            heapSubarray.set(array);
+            heapSubarray[array.length] = 0;
+            return ptr;
+        },
+        getQueryVariable: function (variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split('&');
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split('=');
+                if (decodeURIComponent(pair[0]) == variable) {
+                    return decodeURIComponent(pair[1]);
+                }
+            }
+            return "";
+        },
         preRun: [],
-        postRun: [],
+        postRun: [
+            () => {
+                // remove heavy css loader
+                {
+                    let e = document.querySelector(".lds-ring");
+                    e.parentNode.removeChild(e);
+                }
+
+                // setup drop zone
+                {
+                    let el = document.querySelector('#canvas')
+
+                    el.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+
+                    el.addEventListener("drop", (e) => {
+                        console.log('File dropped');
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        let fileName = e.dataTransfer.files[0].name;
+
+                        var reader = new FileReader();
+                        reader.onload = () => {
+
+                          var array = new Uint8Array(reader.result);
+
+                          let ptr = Module.arrayToHeap(array);
+
+                          let enc = new TextEncoder();
+                          let fileNameUtf8 = enc.encode(fileName);
+
+                          Module.OpenFileAsync(Module.dropFileId, fileNameUtf8, ptr, array.length);
+
+                        }
+                        reader.readAsArrayBuffer(e.dataTransfer.files[0]);
+                    });
+                }                
+                
+                // set up input tag
+                document.querySelector('input').addEventListener('change', function() {
+
+                  let fileName = this.files[0].name;
+
+                  var reader = new FileReader();
+                  reader.onload = () => {
+                    let array = new Uint8Array(reader.result);
+
+                    let ptr = Module.arrayToHeap(array);
+
+                    let enc = new TextEncoder();
+                    let fileNameUtf8 = enc.encode(fileName);
+
+                    Module.OpenFileAsync(Module.openFileReqId, fileNameUtf8, ptr, array.length);
+                  }
+
+                  reader.onabort = () => { console.log("onabbort")};
+
+                  reader.onerror = () => { console.log("onerror")};
+
+
+                  reader.readAsArrayBuffer(this.files[0]);
+
+                }, false);
+            }
+        ],
+        isFirefox: function() {
+            return navigator.userAgent.indexOf("Firefox") > 0 ? 1 : 0;
+        },
+        getVendor: function() {
+            let gl = document.getElementById('canvas').getContext('webgl2');
+
+            if (!gl) {
+              return 0;
+            }
+
+            let debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            let vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+
+            let ptr = Module.strToHeap(vendor);
+            return ptr;
+        },
+        getRenderer: function() {
+            let gl = document.getElementById('canvas').getContext('webgl2');
+
+            if (!gl) {
+              return 0;
+            }
+
+            let debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            let renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+
+            let ptr = Module.strToHeap(renderer);
+            return ptr;
+        },
+        click: function (node) {
+            let event = window.document.createEvent("MouseEvents");
+            event.initMouseEvent(
+              "click", true, false, window, 0, 0, 0, 0, 0
+              , false, false, false, false, 0, null
+            );
+            node.dispatchEvent(event);
+        },
+        saveFile: function (filename, ptr, numBytes) {
+            let blob = new Blob([new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes)]);
+            let url = window.URL.createObjectURL(blob);
+
+            let save_link = window.document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+            save_link.href = url;
+            save_link.download = filename;
+            Module.click(save_link);
+        },
+        fetchFile: function(req_id, url) {
+            var oReq = new XMLHttpRequest();
+            oReq.open("GET", url, true);
+            oReq.responseType = "arraybuffer";
+
+            oReq.onprogress = (event) => {
+              //console.log(`[${req_id}] Received ` + event.loaded / 1024 + ' of ' + event.total / 1024);
+              Module.SetProgress(req_id, event.loaded, event.total);
+            }
+
+            oReq.onload = (oEvent) => {
+              var arrayBuffer = oReq.response;
+              if (arrayBuffer) {
+                var byteArray = new Uint8Array(arrayBuffer);
+
+                let ptr = Module.arrayToHeap(byteArray);;
+
+                let enc = new TextEncoder();
+                let fileNameUtf8 = enc.encode(url);
+                Module.OpenFileAsync(req_id, fileNameUtf8, ptr, byteArray.length);
+              }
+            };
+
+            oReq.send(null);
+        },
+        openFile: function(req_id, filters, default_url) {
+            Module.openFileReqId = req_id;
+            let inputElem = document.querySelector('input');
+            inputElem.accept = filters;
+
+            inputElem.click();
+        },
         print: (function() {
             return function(text) {
                 text = Array.prototype.slice.call(arguments).join(' ');
