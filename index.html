@@ -254,6 +254,17 @@
             save_link.download = filename;
             Module.click(save_link);
         },
+        encodeDataToUrl: function (ptr, numBytes) {
+            let data = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+            let string = new TextDecoder("utf-8").decode(data);
+            window.history.replaceState(null, null, "/?open=" + encodeURIComponent(btoa(string)));
+        },
+        decodeDataFromUrl: function() {
+            let string = atob(decodeURIComponent(Module.getQueryVariable("open")))
+
+            let ptr = Module.strToHeap(string);
+            return ptr;
+        },
         fetchFile: function(req_id, url) {
             var oReq = new XMLHttpRequest();
             oReq.open("GET", url, true);
